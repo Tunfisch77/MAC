@@ -20,7 +20,7 @@ class Installer : Form {
   Application.EnableVisualStyles();Application.SetCompatibleTextRenderingDefault(false);
   try{Application.Run(new Installer(args));}catch(Exception e){MacDialog.Show(null,new Palette(false),"Setup konnte nicht starten",e.Message);Environment.ExitCode=1;}
  }
- Installer(string[] args){
+ internal Installer(string[] args){
   target=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"MAC-Versicherungsagentur");
   if(args.Length==2&&args[0]=="/target")target=Path.GetFullPath(args[1]);
   Text="MAC Setup "+BuildInfo.Version;ClientSize=new Size(620,420);FormBorderStyle=FormBorderStyle.FixedDialog;MaximizeBox=false;StartPosition=FormStartPosition.CenterScreen;Font=new Font("Segoe UI",10);BackColor=Color.FromArgb(243,246,244);
@@ -38,7 +38,7 @@ class Installer : Form {
   }
   if(result.Count!=Files.Length)throw new Exception("Das Programmpaket ist unvollständig.");return result;
  }
- async Task Run(){busy=true;install.Enabled=false;progress.Style=ProgressBarStyle.Marquee;string stage=null;
+ async Task Run(){busy=true;install.Enabled=false;progress.Style=ProgressBarStyle.Marquee;string stage=null;bool completed=false;
   try{
    status.Text="Programmdateien werden von Tunfisch77/MAC heruntergeladen …";
    var files=await Task.Run(()=>{byte[] bytes=Updater.Fetch(PayloadInfo.Url,20*1024*1024);if(!Updater.Verify(bytes,PayloadInfo.Hash))throw new Exception("Die Prüfsumme stimmt nicht. Bitte das aktuelle Setup verwenden. Es wurde nichts installiert.");return Unpack(bytes);});
@@ -58,15 +58,21 @@ class Installer : Form {
    try{Shortcut(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),"MAC Kundenklärung.lnk"),exe,target);}catch{warning+="\nDesktop-Verknüpfung konnte nicht erstellt werden.";}
    status.Text="Installation abgeschlossen.\n\nProgrammordner: "+target+warning;
    using(var app=Process.Start(new ProcessStartInfo(exe){UseShellExecute=true,WorkingDirectory=target})){
+    if(app==null)throw new Exception("Die Dateien wurden installiert, aber Windows konnte den App-Start nicht bestätigen.");
     bool exited=await Task.Run(()=>app.WaitForExit(2500));
     if(exited)status.Text+="\n\nDie App wurde sofort beendet (Code "+app.ExitCode+"). Bitte diese Meldung bei der Fehlersuche angeben.";
-    else status.Text+="\n\nDie App wurde gestartet. Dieses Setup kannst du schließen.";
+    else {
+     bool responsive=await Task.Run(()=>{try{return app.WaitForInputIdle(10000)&&!app.HasExited;}catch{return false;}});
+     if(responsive){status.Text+="\n\nDie App wurde gestartet.";completed=string.IsNullOrEmpty(warning);}
+     else status.Text+="\n\nDie Dateien wurden installiert, aber der App-Start konnte noch nicht bestätigt werden. Bitte die App prüfen. Dieses Setup bleibt zur Kontrolle geöffnet.";
+    }
    }
    install.Text="Erneut installieren / reparieren";
   }catch(System.Net.WebException e){var response=e.Response as System.Net.HttpWebResponse;status.Text=response!=null&&response.StatusCode==System.Net.HttpStatusCode.NotFound?"Die Programmdateien fehlen noch auf GitHub.\n\nBitte zuerst im öffentlichen Release v"+BuildInfo.Version+" die Datei MAC-Programm-"+BuildInfo.Version+".zip bereitstellen. Danach dieses Setup erneut starten.":"Download fehlgeschlagen. Bitte Internetverbindung prüfen und erneut versuchen.\n\n"+e.Message;
   }catch(Exception e){status.Text="Installation nicht abgeschlossen.\n\n"+e.Message+"\n\nDu kannst die Installation erneut versuchen.";
-  }finally{if(stage!=null){try{Directory.Delete(stage,true);}catch{}}busy=false;install.Enabled=true;progress.Style=ProgressBarStyle.Blocks;}
+  }finally{if(stage!=null){try{Directory.Delete(stage,true);}catch{}}FinishRun(completed);}
  }
+ internal void FinishRun(bool completed){busy=false;install.Enabled=true;progress.Style=ProgressBarStyle.Blocks;if(completed)Close();}
  static void Shortcut(string path,string exe,string dir){
   Type t=Type.GetTypeFromProgID("WScript.Shell");object shell=Activator.CreateInstance(t);object shortcut=null;
   try{shortcut=t.InvokeMember("CreateShortcut",BindingFlags.InvokeMethod,null,shell,new object[]{path});Type s=shortcut.GetType();s.InvokeMember("TargetPath",BindingFlags.SetProperty,null,shortcut,new object[]{exe});s.InvokeMember("WorkingDirectory",BindingFlags.SetProperty,null,shortcut,new object[]{dir});s.InvokeMember("IconLocation",BindingFlags.SetProperty,null,shortcut,new object[]{Path.Combine(dir,"assets","mac.ico")});s.InvokeMember("Save",BindingFlags.InvokeMethod,null,shortcut,null);}finally{if(shortcut!=null)System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shortcut);System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shell);}

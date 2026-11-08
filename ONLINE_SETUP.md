@@ -1,21 +1,21 @@
 # Ab Version 1.3: zusätzliche zentrale Anmeldung
 
-**Die vollständige Reihenfolge steht in EINRICHTUNG_1.3.1.md.** Zuerst den Server aus `auth-server/` über das mitgelieferte `render.yaml` bereitstellen, Admin-Hash nur beim Hoster hinterlegen, Konten anlegen und testen. Erst danach das neue GitHub-Release veröffentlichen. Die folgenden Hinweise erläutern den unveränderten Mechanismus des Online-Installers.
+**Die vollständige Reihenfolge steht in EINRICHTUNG_1.3.2.md.** Zuerst den Server aus `auth-server/` über das mitgelieferte `render.yaml` bereitstellen, Admin-Hash nur beim Hoster hinterlegen, Konten anlegen und testen. Erst danach das neue GitHub-Release veröffentlichen. Die folgenden Hinweise erläutern den unveränderten Mechanismus des Online-Installers.
 
-# Online-Installer 1.3.1 – zuerst GitHub bereitstellen
+# Online-Installer 1.3.2 – zuerst GitHub bereitstellen
 
-Die Berater erhalten nur `MAC-Setup-1.3.1.exe`. Das Setup lädt alle Programmdateien aus dem öffentlichen Repository `Tunfisch77/MAC`. Es zeigt seinen Zustand und Fehler im Fenster an und kann erneut zur Reparatur ausgeführt werden. Die eigentliche App läuft anschließend lokal; die zentrale Anmeldung, ihre regelmäßige Überprüfung und ausdrücklich gestartete Updateprüfungen benötigen Internet.
+Die Berater erhalten nur `MAC-Setup-1.3.2.exe`. Das Setup lädt alle Programmdateien aus dem öffentlichen Repository `Tunfisch77/MAC`. Es zeigt seinen Zustand und Fehler im Fenster an und kann erneut zur Reparatur ausgeführt werden. Die eigentliche App läuft anschließend lokal; die zentrale Anmeldung, ihre regelmäßige Überprüfung und automatische und manuelle Updateprüfungen benötigen Internet.
 
 ## Einmalige Veröffentlichung durch den Administrator
 
 1. Das Administratorpaket vollständig entpacken.
 2. Den Inhalt von `Quellcode/MAC-App` in die Wurzel des Repositorys hochladen. Keine ursprüngliche Kundendatei hochladen.
-3. Unter https://github.com/Tunfisch77/MAC/releases/new ein öffentliches, reguläres Release mit dem Tag `v1.3.1` erstellen.
-4. Genau diese drei Dateien aus `Release-Dateien` als Release-Assets anhängen: `MAC-Setup-1.3.1.exe`, `MAC-Programm-1.3.1.zip`, `SHA256SUMS.txt`.
+3. Unter https://github.com/Tunfisch77/MAC/releases/new ein öffentliches, reguläres Release mit dem Tag `v1.3.2` erstellen.
+4. Genau diese drei Dateien aus `Release-Dateien` als Release-Assets anhängen: `MAC-Setup-1.3.2.exe`, `MAC-Programm-1.3.2.zip`, `SHA256SUMS.txt`.
 5. Release veröffentlichen. Das Programm-ZIP unverändert hochladen, nicht neu packen oder umbenennen. Es genügt nicht, das ZIP als normale Repositorydatei hochzuladen.
 6. Setup auf einem Windows-PC testen. Erst danach ausschließlich die Setup-EXE an Berater weitergeben.
 
-Bis Schritt 5 meldet das Setup fehlende Dateien. Die Veröffentlichung von 1.3.1 wurde von hier nicht durchgeführt. Vorhandene ältere Releases enthalten nicht das für dieses Setup erforderliche Paket.
+Bis Schritt 5 meldet das Setup fehlende Dateien. Die Veröffentlichung von 1.3.2 wurde von hier nicht durchgeführt. Vorhandene ältere Releases enthalten nicht das für dieses Setup erforderliche Paket.
 
 ## Sicherheit und Installation
 
@@ -35,5 +35,5 @@ Der gemeldete Fehler `System.String.TrimStart(Char)` aus 1.0.0 wurde in 1.0.1 be
 
 Kompilierung, lokale Anwendungsselbsttests, Setup-Selbsttests, Prüfsumme und Paketstruktur werden vor der Übergabe geprüft. Ein tatsächlicher GitHub-Download dieses Pakets und die Windows-Installation sind erst nach Veröffentlichung und auf einem Windows-PC prüfbar. Der Installer ist unsigniert. Windows kann ihn deshalb blockieren; in diesem Fall ist der genaue Wortlaut der Windows-Meldung für die Diagnose nötig.
 
-## Lokale Daten seit 1.3.1
+## Lokale Daten seit 1.3.2
 Einstellungen und verschlüsselte Entwürfe liegen getrennt unter `%LOCALAPPDATA%\MAC-Versicherungsagentur-Daten\`. Das Setup ersetzt nur die fünf bekannten Programmdateien und verändert diesen Datenordner nicht. Vor dem Update fordert die App bei unexportierten Änderungen weiterhin den Excel-Export an. Der Windows-Anwendungsselbsttest prüft zusätzlich DPAPI mit temporären synthetischen Daten.

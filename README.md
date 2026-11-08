@@ -1,8 +1,8 @@
-# MAC Kundenklärung 1.3.1
+# MAC Kundenklärung 1.3.2
 
 Lokale Windows-Desktop-App für die bereitgestellte MAC-XLSM-Vorlage. C# 5 / WinForms / .NET Framework 4.7.2+, ohne externe Client-Laufzeitpakete, lokale Kundendatenbank, WebView oder Telemetrie. Version 1.3 ergänzt einen zentralen HTTPS-Anmeldedienst (Python/WSGI, SQLite für Konten und Sitzungen). Kundeneinträge und ihre verschlüsselte Wiederherstellung bleiben lokal. Nichts wurde gepusht oder veröffentlicht.
 
-**Zuerst EINRICHTUNG_1.3.1.md lesen.** Der Anmeldedienst muss zusätzlich zu GitHub bereitgestellt werden. Die öffentliche Serveradresse `https://mac-anmeldung.onrender.com` ist fest hinterlegt. Zugangsdaten und Konten werden nicht mitgeliefert.
+**Zuerst EINRICHTUNG_1.3.2.md lesen.** Der Anmeldedienst muss zusätzlich zu GitHub bereitgestellt werden. Die öffentliche Serveradresse `https://mac-anmeldung.onrender.com` ist fest hinterlegt. Zugangsdaten und Konten werden nicht mitgeliefert.
 
 ## Projekt
 
@@ -15,7 +15,7 @@ Lokale Windows-Desktop-App für die bereitgestellte MAC-XLSM-Vorlage. C# 5 / Win
 - `src/Theme.cs`: Farbpaletten und MAC-Dialogfenster.
 - `src/Workbook.cs`: gemeinsamer Validator, eindeutige 8–12-stellige Polizzen, Namensanfänge, OOXML-Import/Export und VBA-Erhalt.
 - `src/LocalState.cs`: versioniertes binäres Sitzungsformat ohne BinaryFormatter, DPAPI CurrentUser, atomisches Schreiben, Einstellungen und Instanzsperre.
-- `src/Updater.cs`: ausschließlich manuelle GitHub-Abfrage/Download mit Integritätsprüfung.
+- `src/Updater.cs`: manuelle und stündliche GitHub-Abfrage; Download nur nach Bestätigung mit Integritätsprüfung.
 - `src/Installer.cs`: Online-Setup, Programmprüfung, feste Installation pro Benutzer und Verknüpfungen.
 - `src/Version.cs`: zentrale Versionsnummer; `src/SelfTest.cs`: automatisierte, synthetische Tests.
 - `assets/`: kundenfreie XLSM-Vorlage, bereitgestelltes MAC-Logo und daraus abgeleitetes Icon.
@@ -32,7 +32,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
 
 Der Bypass gilt nur für diesen Build-Aufruf, nicht dauerhaft. In verwalteten Umgebungen den Build mit der IT abstimmen. Der Build benötigt bei vorhandenen Referenzen kein Internet und verwendet ausschließlich Framework-Referenzen, keine erweiterten Mono-Laufzeitreferenzen. Der frühere `String.TrimStart(Char)`-Fehler bleibt durch char[]-Aufrufe und IL-Prüfung abgesichert.
 
-Ergebnis in `dist`: `MAC-Setup-1.3.1.exe`, `MAC-Programm-1.3.1.zip`, `SHA256SUMS.txt`. Das Setup enthält die Prüfsumme genau dieses Programm-ZIPs. Dateien unterschiedlicher Builds nicht mischen.
+Ergebnis in `dist`: `MAC-Setup-1.3.2.exe`, `MAC-Programm-1.3.2.zip`, `SHA256SUMS.txt`. Das Setup enthält die Prüfsumme genau dieses Programm-ZIPs. Dateien unterschiedlicher Builds nicht mischen.
 
 ## Testen
 
@@ -56,7 +56,7 @@ DPAPI-Dokumentation: https://learn.microsoft.com/dotnet/api/system.security.cryp
 
 Den Inhalt von `Quellcode/MAC-App` aus dem Administratorpaket in die Wurzel von `Tunfisch77/MAC` übernehmen, einschließlich `src`, `assets`, `tests`, Buildskript, Dokumentation, `.gitignore` und `.github/workflows/build.yml`. Keine Original-Kundendateien oder lokalen Entwürfe hochladen. `assets/template.xlsm` ist bereinigt.
 
-Unter https://github.com/Tunfisch77/MAC/releases/new den Tag **v1.3.1** erstellen. Die drei zusammengehörigen Dateien aus `Release-Dateien` anhängen und regulär/öffentlich veröffentlichen, nicht als Draft oder Pre-release. Das Programm-ZIP unverändert hochladen. Danach unter Windows testen; Berater erhalten nur die EXE. Der Workflow baut und prüft auf Windows und lädt ein Build-Artefakt hoch, veröffentlicht aber kein Release; nur Leserechte.
+Unter https://github.com/Tunfisch77/MAC/releases/new den Tag **v1.3.2** erstellen. Die drei zusammengehörigen Dateien aus `Release-Dateien` anhängen und regulär/öffentlich veröffentlichen, nicht als Draft oder Pre-release. Das Programm-ZIP unverändert hochladen. Danach unter Windows testen; Berater erhalten nur die EXE. Der Workflow baut und prüft auf Windows und lädt ein Build-Artefakt hoch, veröffentlicht aber kein Release; nur Leserechte.
 
 Für weitere Versionen `src/Version.cs` erhöhen, Anleitung aktualisieren und neu bauen. Bereits veröffentlichte Pakete nicht ersetzen. GitHub muss für den Installer einen SHA-256-Digest liefern; andernfalls verweigert der Updater die Installation. Private Releases ohne öffentlichen Download werden nicht unterstützt. Vollständige Online-Anleitung in ONLINE_SETUP.md.
 

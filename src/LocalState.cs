@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Web.Script.Serialization;
 namespace MacApp {
  public sealed class Preferences {
+  public string UpdateNoticeVersion="";public long UpdateNoticeUtcTicks;
   public bool Dark=false,Maximized=false;public int Width=1440,Height=960;public double Split=0.40;
  }
  public sealed class SessionState:IDisposable {

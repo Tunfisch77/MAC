@@ -26,6 +26,9 @@ namespace MacApp {
   }
  }
  public sealed class MainForm:Form {
+  readonly Timer updateTimer=new Timer{Interval=15000};
+  readonly UpdateSchedule updateSchedule=new UpdateSchedule(DateTime.UtcNow);
+  bool fileDialogOpen;bool checkingAutomatically;Release pendingUpdate;
   AuthClient auth;readonly Timer authTimer=new Timer{Interval=60000};bool authBusy;readonly Label identity=new Label();Button accountButton;
   Book book; Palette palette=new Palette(false);
   readonly DataGridView grid=new SmoothGrid();readonly Control[] fields=new Control[10];readonly Label[] errors=new Label[10];readonly RowStyle[] errorRows=new RowStyle[10];
@@ -80,6 +83,8 @@ namespace MacApp {
    status.Dock=DockStyle.Fill;status.TextAlign=ContentAlignment.MiddleLeft;status.Tag="muted";status.Font=new Font("Segoe UI",9);status.Text="Lokale, verschlüsselte Wiederherstellung · Version "+Updater.Version;root.Controls.Add(status,0,3);
    ClearForm();RefreshRows();ApplyTheme();FormClosing+=OnFormClosingRequested;
    if(!testing){auth=new AuthClient(LocalState.ProfileFolder);SetAccess(false);}
+   updateTimer.Tick+=async(sender,e)=>await PollUpdates(Updater.Check,DateTime.UtcNow);
+   FormClosed+=(sender,e)=>{updateTimer.Dispose();saveTimer.Dispose();authTimer.Dispose();};
    authTimer.Tick+=async(sender,e)=>{if(!authBusy&&ready&&!updating&&Application.OpenForms.Count==1&&!await ValidateAccess())await SwitchAccount();};
    saveTimer.Tick+=(sender,e)=>{if(preferencesPending)SavePreferences();if(recoveryPending)PersistRecovery();};
    split.SplitterMoved+=(sender,e)=>{if(ready){preferences.Split=(double)split.SplitterDistance/Math.Max(1,split.Width);preferencesPending=true;}};
@@ -124,7 +129,7 @@ namespace MacApp {
   void ClearUndoHistory(){foreach(var item in removed)item.Record.Clear();removed.Clear();if(undoButton!=null)undoButton.Enabled=false;}
   void NewSession(Book next){editing=-1;showErrors=false;ClearUndoHistory();book.Dispose();book=next;ClearChoices();ClearForm();dirty=book.Rows.Any(r=>r.OriginalValues!=null&&r.Values[0]!=r.OriginalValues[0]);search.Clear();search.ClearUndo();incompleteOnly.Checked=false;RefreshRows();QueueRecovery();}
   void Reset(){if(!Confirm("Sitzung zurücksetzen?","Alle Einträge, Formulareingaben und die lokale Wiederherstellungskopie werden entfernt. Bereits gespeicherte Excel-Dateien bleiben bestehen.","Zurücksetzen"))return;if(!DeleteRecovery())return;NewSession(Book.Load(Template));status.Text="Neue, leere Sitzung · Wiederherstellungskopie entfernt.";}
-  void OpenBook(){if((dirty||DraftChanged())&&!Confirm("Excel-Datei öffnen?","Die aktuelle Sitzung wird verworfen. Nicht exportierte Eingaben gehen dabei verloren.","Datei auswählen"))return;using(var d=new OpenFileDialog{Filter="MAC Excel mit Makros (*.xlsm)|*.xlsm",Title="Vorhandene MAC-Datei öffnen",RestoreDirectory=true})if(d.ShowDialog(this)==DialogResult.OK)try{Book next=Book.Load(d.FileName);if(!DeleteRecovery()){next.Dispose();return;}NewSession(next);status.Text="Datei geöffnet · Namensanfänge vereinheitlicht; ungültige Angaben vor Export korrigieren.";}catch(Exception e){Tell("Import nicht möglich",e.Message);}}
+  void OpenBook(){fileDialogOpen=true;try{if((dirty||DraftChanged())&&!Confirm("Excel-Datei öffnen?","Die aktuelle Sitzung wird verworfen. Nicht exportierte Eingaben gehen dabei verloren.","Datei auswählen"))return;using(var d=new OpenFileDialog{Filter="MAC Excel mit Makros (*.xlsm)|*.xlsm",Title="Vorhandene MAC-Datei öffnen",RestoreDirectory=true})if(d.ShowDialog(this)==DialogResult.OK)try{Book next=Book.Load(d.FileName);if(!DeleteRecovery()){next.Dispose();return;}NewSession(next);status.Text="Datei geöffnet · Namensanfänge vereinheitlicht; ungültige Angaben vor Export korrigieren.";}catch(Exception e){Tell("Import nicht möglich",e.Message);}}finally{fileDialogOpen=false;}}
   async Task<bool> Save(){
    if(DraftChanged()&&!Commit())return false;
    int invalid=book.Rows.FindIndex(r=>!Complete(r));if(invalid>=0){Edit(invalid);ValidateForm();Tell("Angaben ergänzen","Eintrag "+(invalid+1)+" ist noch unvollständig oder enthält einen ungültigen Wert. Bitte die markierten Felder ausfüllen. Die Polizzennummer muss eindeutig sein und aus 8–12 Ziffern bestehen. Für andere Felder ist „Nicht angegeben“ erlaubt.");return false;}
@@ -151,21 +156,38 @@ namespace MacApp {
     else if(answer==DialogResult.No){if(!DeleteRecovery()){Close();return;}}
     else{Close();return;}
    }
-   ready=true;recoveryPending=false;saveTimer.Start();authTimer.Start();SetAccess(true);
+   ready=true;recoveryPending=false;saveTimer.Start();authTimer.Start();updateTimer.Start();SetAccess(true);
   }
   void OnFormClosingRequested(object sender,FormClosingEventArgs e){
    if(authBusy){e.Cancel=true;return;}
    if(updating){Tell("Bitte kurz warten","Die Updateprüfung oder der Download läuft noch.");e.Cancel=true;return;}
    if(ready&&!PersistRecovery()){Tell("Schließen abgebrochen","Der lokale Entwurf konnte nicht gesichert werden. Bitte die Daten als Excel exportieren, Schreibrechte prüfen oder die Sitzung ausdrücklich zurücksetzen.");e.Cancel=true;return;}
-   SavePreferences();closing=true;saveTimer.Stop();authTimer.Stop();ClearForm();ClearChoices();ClearUndoHistory();grid.Rows.Clear();search.Clear();search.ClearUndo();book.Dispose();draftBaseline="";if(local!=null)local.Dispose();
+   SavePreferences();closing=true;updateTimer.Stop();pendingUpdate=null;saveTimer.Stop();authTimer.Stop();ClearForm();ClearChoices();ClearUndoHistory();grid.Rows.Clear();search.Clear();search.ClearUndo();book.Dispose();draftBaseline="";if(local!=null)local.Dispose();
+  }
+  bool CanOfferUpdate(){return !closing&&!IsDisposed&&ready&&editor.Visible&&!fileDialogOpen&&!authBusy&&!updating&&Application.OpenForms.Count==1;}
+  bool ShouldOffer(Release release,DateTime now){return release!=null&&UpdateSchedule.ShouldNotify(release.Version,preferences.UpdateNoticeVersion,preferences.UpdateNoticeUtcTicks,now);}
+  async Task PollUpdates(Func<Task<Release>> check,DateTime now){
+   if(!CanOfferUpdate()||checkingAutomatically)return;
+   if(pendingUpdate!=null){var queued=pendingUpdate;pendingUpdate=null;if(ShouldOffer(queued,now)){await CheckUpdates(()=>Task.FromResult(queued),true);return;}}
+   if(!updateSchedule.IsDue(now))return;
+   updateSchedule.Checked(now);checkingAutomatically=true;
+   try{var release=await check();if(!closing&&!IsDisposed)pendingUpdate=release;}catch{/* Automatic network failures remain silent; retry next hour. */}finally{checkingAutomatically=false;}
+   if(CanOfferUpdate()&&ShouldOffer(pendingUpdate,DateTime.UtcNow)){var release=pendingUpdate;pendingUpdate=null;await CheckUpdates(()=>Task.FromResult(release),true);}
   }
   async Task CheckUpdates(){await CheckUpdates(Updater.Check);}
-  async Task CheckUpdates(Func<Task<Release>> check){if(updating)return;updating=true;toolbar.Enabled=false;editor.Enabled=false;try{
-   status.Text="GitHub Releases werden geprüft …";var release=await check();if(release==null){Tell("App ist aktuell","Keine neuere veröffentlichte Version verfügbar. Deine Eingaben bleiben erhalten.");return;}
-   if(!Confirm("Update verfügbar","Version "+release.Version+" ist verfügbar. Das Herunterladen und Installieren startet die App neu.","Update vorbereiten"))return;
-   if(dirty||DraftChanged()){if(!Confirm("Eingaben zuerst speichern","Vor der Installation müssen die Eingaben als Excel exportiert werden. Bei Abbruch bleiben App und Eingaben geöffnet.","Jetzt exportieren")||!await SaveAuthorized())return;}
-   status.Text="Update wird heruntergeladen und geprüft …";string setup=await Updater.Download(release);Process.Start(new ProcessStartInfo(setup,"/target \""+AppDomain.CurrentDomain.BaseDirectory.TrimEnd(new char[]{'\\'})+"\""){UseShellExecute=true});updating=false;Close();
-  }catch(Exception e){Tell("Update nicht verfügbar",e.Message);}finally{updating=false;if(!IsDisposed){SetAccess(editor.Visible);status.Text="Kundendaten lokal · Anmeldung zentral · Updates über GitHub.";}}}
+  async Task CheckUpdates(Func<Task<Release>> check,bool automatic=false){
+   if(checkingAutomatically){if(!automatic)status.Text="Eine Updateprüfung läuft bereits im Hintergrund.";return;}if(updating||closing)return;updating=true;toolbar.Enabled=false;editor.Enabled=false;
+   try{
+    if(!automatic){pendingUpdate=null;updateSchedule.Checked(DateTime.UtcNow);status.Text="GitHub Releases werden geprüft …";}
+    var release=await check();if(closing||IsDisposed)return;
+    if(release==null){if(!automatic)Tell("App ist aktuell","Keine neuere veröffentlichte Version verfügbar. Deine Eingaben bleiben erhalten.");return;}
+    if(WindowState==FormWindowState.Minimized)WindowState=preferences.Maximized?FormWindowState.Maximized:FormWindowState.Normal;
+    Activate();preferences.UpdateNoticeVersion=release.Version;preferences.UpdateNoticeUtcTicks=DateTime.UtcNow.Ticks;preferencesPending=true;SavePreferences();
+    if(MacDialog.Show(this,palette,"Update verfügbar","Version "+release.Version+" ist verfügbar. Möchtest du jetzt aktualisieren? Offene Eingaben müssen vorher als Excel gespeichert werden.",new DialogChoice("Jetzt aktualisieren",DialogResult.Yes),new DialogChoice("Später",DialogResult.Cancel))!=DialogResult.Yes)return;
+    if(dirty||DraftChanged()){if(!Confirm("Eingaben zuerst speichern","Vor der Installation müssen die Eingaben als Excel exportiert werden. Bei Abbruch bleiben App und Eingaben geöffnet.","Jetzt exportieren")||!await SaveAuthorized())return;}
+    status.Text="Update wird heruntergeladen und geprüft …";string setup=await Updater.Download(release);Process.Start(new ProcessStartInfo(setup,"/target \""+AppDomain.CurrentDomain.BaseDirectory.TrimEnd(new char[]{'\\'})+"\""){UseShellExecute=true});updating=false;Close();
+   }catch(Exception e){Tell("Update nicht verfügbar",e.Message);}finally{updating=false;if(!closing&&!IsDisposed){SetAccess(editor.Visible);status.Text="Kundendaten lokal · Anmeldung zentral · Updates über GitHub.";}}
+  }
   void SetAccess(bool allowed){toolbar.Visible=true;toolbar.Enabled=true;editor.Visible=allowed;editor.Enabled=allowed&&!updating;foreach(Control c in toolbar.Controls)c.Enabled=allowed&&!updating;if(accountButton!=null){accountButton.Enabled=!updating;accountButton.Text=allowed?"Konto / Abmelden":"Erneut anmelden";}if(!allowed)identity.Text="Gesperrt · Online-Anmeldung erforderlich";else if(!testing&&auth.Session!=null&&auth.Session.user!=null)identity.Text=(auth.Session.role=="admin"?"Adminmodus · Berater: ":"Angemeldet als: ")+auth.Session.user.Name;}
   async Task<bool> Authenticate(bool resume){
    SetAccess(false);

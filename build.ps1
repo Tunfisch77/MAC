@@ -49,4 +49,9 @@ if ($check.ExitCode) {throw 'Setup-Selbsttest fehlgeschlagen.'}
 (Get-FileHash $payload -Algorithm SHA256).Hash.ToLower() + '  ' + [IO.Path]::GetFileName($payload) | Add-Content dist\SHA256SUMS.txt -Encoding ASCII
 & $csc /nologo /codepage:65001 /target:exe /out:dist\AuthIntegration.exe @refs /r:dist\MAC-Kundenklaerung.exe tests\AuthIntegration.cs
 if ($LASTEXITCODE) {throw 'Client-Integrationstest konnte nicht gebaut werden.'}
+$appSources = @('src\App.cs','src\Auth.cs','src\AuthUi.cs','src\LocalState.cs','src\ModernControls.cs','src\Theme.cs','src\MultiSelect.cs','src\Workbook.cs','src\Updater.cs','src\SelfTest.cs','src\Version.cs')
+& $csc /nologo /codepage:65001 /target:exe /main:UpdateUiSmoke /out:dist\UpdateUiSmoke.exe @refs @appSources tests\UpdateUiSmoke.cs
+if ($LASTEXITCODE) {throw 'Update-Oberflaechentest konnte nicht gebaut werden.'}
+& $csc /nologo /codepage:65001 /target:exe /main:InstallerUiSmoke /out:dist\InstallerUiSmoke.exe @refs src\Installer.cs src\ModernControls.cs src\Theme.cs src\Updater.cs src\Version.cs build\PayloadInfo.cs tests\InstallerUiSmoke.cs
+if ($LASTEXITCODE) {throw 'Installer-Oberflaechentest konnte nicht gebaut werden.'}
 Write-Host 'Fertig: Setup und Programmpaket gemeinsam als Release hochladen.' 

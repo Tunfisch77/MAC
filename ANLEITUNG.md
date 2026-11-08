@@ -1,8 +1,8 @@
-# MAC Kundenklärung 1.3.1
+# MAC Kundenklärung 1.3.2
 
 ## Installation
 
-Windows 10/11 mit .NET Framework 4.7.2 oder neuer. Excel ist zum Erfassen und Exportieren nicht erforderlich. Berater benötigen ausschließlich `MAC-Setup-1.3.1.exe`. Während der Installation ist Internet erforderlich: Das passende Programmpaket muss vorher im öffentlichen GitHub-Release `v1.3.1` liegen. Einzelheiten für den Administrator stehen in ONLINE_SETUP.md.
+Windows 10/11 mit .NET Framework 4.7.2 oder neuer. Excel ist zum Erfassen und Exportieren nicht erforderlich. Berater benötigen ausschließlich `MAC-Setup-1.3.2.exe`. Während der Installation ist Internet erforderlich: Das passende Programmpaket muss vorher im öffentlichen GitHub-Release `v1.3.2` liegen. Einzelheiten für den Administrator stehen in ONLINE_SETUP.md.
 
 Programmordner: `%LOCALAPPDATA%\MAC-Versicherungsagentur\`. Die Installation erfolgt pro Windows-Benutzer ohne Administratorrechte. Startmenü- und, wenn erlaubt, Desktop-Verknüpfungen werden erstellt. Der Installer ist unsigniert; bei einer Sperre auf verwalteten PCs die Freigabe durch die IT verwenden.
 
@@ -60,7 +60,7 @@ Diese Version speichert auf ausdrücklichen Wunsch zusätzlich zum Excel-Export 
 
 Ablage: `%LOCALAPPDATA%\MAC-Versicherungsagentur-Daten\`, getrennt vom Programmordner.
 
-- `settings.json`: ausschließlich Farbe/Fenstergröße/Aufteilung, keine Kundendaten.
+- `settings.json`: Farbe/Fenstergröße/Aufteilung und letzte Updatehinweis-Version/-Zeitpunkt, keine Kundendaten.
 - `profiles/<Profilkennung>/session.macdraft`: verschlüsselter Entwurf mit der Arbeitsmappe, übernommenen Einträgen und dem aktuellen, auch unvollständigen Formular.
 - Dateien mit `.new`: Zwischenstand des atomaren Schreibens; Kundendaten auch hier ausschließlich verschlüsselt.
 - `session.lock`: leere Sperrdatei gegen gleichzeitige App-Instanzen, keine Kundendaten.
@@ -83,7 +83,9 @@ Exportziele im Programmordner werden abgewiesen. Überschreiben erfolgt erst nac
 
 ## Updates und Datenschutz
 
-**Nach Updates suchen** fragt nur nach ausdrücklichem Klick das neueste reguläre Release von `Tunfisch77/MAC` ab. Die Prüfung ist mit ungespeicherten Eingaben möglich. Vor einer tatsächlichen Installation müssen nicht exportierte Eingaben als Excel gespeichert werden. Abbruch oder ungültige Angaben verhindern den Installationsstart. Download nur vom festgelegten Repository bzw. offiziellen Release-Assets und mit SHA-256-Prüfung. Kein Release/kein Netzwerk führt zu einer verständlichen Meldung. Es wurde nichts automatisch veröffentlicht.
+**Automatische Updateprüfung:** Während die App geöffnet und ein Beraterprofil zugänglich ist, wird kurz nach dem Start und danach etwa jede Stunde das neueste reguläre Release von `Tunfisch77/MAC` geprüft. Auch minimiert; kein sichtbarer Timer und kein zusätzlicher Prozess nach dem Schließen. Die Netzwerkabfrage blockiert das Formular nicht. Offline-/GitHub-Fehler bleiben bei der automatischen Prüfung still. Ein Update erscheint in einem MAC-Dialog mit „Jetzt aktualisieren“ und „Später“. Offene Dialoge werden abgewartet; ein minimiertes Fenster wird für den Hinweis wiederhergestellt. Dieselbe Version wird frühestens nach 24 Stunden erneut automatisch angeboten, auch nach einem App-Neustart. Eine andere neue Version kann früher angezeigt werden. In `settings.json` werden dazu nur Versionsnummer und Zeitpunkt gespeichert.
+
+**Nach Updates suchen** prüft weiterhin sofort manuell und kann auch eine zurückgestellte Version erneut anbieten. Während einer laufenden Hintergrundabfrage meldet der Button, dass bereits geprüft wird. Die Prüfung ist mit ungespeicherten Eingaben möglich. Vor einer tatsächlichen Installation müssen nicht exportierte Eingaben als Excel gespeichert werden. Abbruch oder ungültige Angaben verhindern den Installationsstart. Download nur vom festgelegten Repository bzw. offiziellen Release-Assets und mit SHA-256-Prüfung. Kein Release/kein Netzwerk führt zu einer verständlichen Meldung. Das Setup schließt sich nach erfolgreicher Installation und bestätigtem Start des App-Fensters automatisch. Bei Fehlern oder Hinweisen zu fehlenden Verknüpfungen bleibt es zur Kontrolle offen. Es wurde nichts automatisch veröffentlicht.
 
 Keine lokale Kundendatenbank, Kundenlogs, Telemetrie, WebView, Crash-Uploads oder Cloudspeicherung von Kundeneinträgen. Die Kundenwerte gelangen nicht in Update- oder Loginanfragen. Netzwerkcode befindet sich in Updater.cs und Auth.cs; GitHub bzw. der Anmeldeserver erhalten bei einer Verbindung IP-Adresse und App-User-Agent. Microsoft-.NET-Komponenten für WinForms, XML, ZIP, SHA-256 und DPAPI führen hier keine Kundenübertragung aus. Es wurden keine Analyse-/Telemetriepakete eingebunden. Quellcodeprüfung und Testgrenzen stehen in TESTBERICHT.md.
 
@@ -101,4 +103,4 @@ Vor dem Export wird das Konto online geprüft. In der bisher leeren Zeile 3 steh
 
 Die früher rein lokale Nutzung wird für die ausdrücklich gewünschte zentrale Anmeldung erweitert. Auf dem Anmeldeserver liegen Beraternamen, gesalzene Passwort-Hashes, widerrufbare Sitzungen und Zähler zur Begrenzung von Anmeldeversuchen. Kundeneinträge werden nicht dorthin übertragen. Lokal liegen die bekannten Einstellungen und ggf. ein Windows-geschützter Anmeldenachweis. Die öffentliche HTTPS-Adresse ist fest im Programm hinterlegt; alte Adressdateien bleiben wirkungslos. Entwürfe liegen verschlüsselt in einem kontospezifischen Unterordner `profiles` des bisherigen Datenordners. Gemeinsame Windows-Konten stellen keine sichere Trennung gegenüber anderen lokalen Programmen dar.
 
-Einrichtung für die Administration: **EINRICHTUNG_1.3.1.md** im vollständigen Projektpaket.
+Einrichtung für die Administration: **EINRICHTUNG_1.3.2.md** im vollständigen Projektpaket.

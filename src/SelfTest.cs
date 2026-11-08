@@ -61,6 +61,15 @@ static class SelfTest {
    Assert(b.Xml("xl/worksheets/sheet1.xml").Descendants(Book.N+"pane").Any(p=>(string)p.Attribute("topLeftCell")=="A5"),"fixierte Zeilen 1–4");
    Assert(b.Xml("xl/worksheets/sheet1.xml").Descendants(Book.N+"dataValidation").Count()==4,"vier Excel-Auswahllisten");
   }
+  var now=new DateTime(2026,11,8,12,0,0,DateTimeKind.Utc);var schedule=new UpdateSchedule(now);
+  Assert(!schedule.IsDue(now.AddSeconds(29))&&schedule.IsDue(now.AddSeconds(30)),"Erste Updateprüfung nach 30 Sekunden");schedule.Checked(now.AddSeconds(30));
+  Assert(!schedule.IsDue(now.AddMinutes(59))&&schedule.IsDue(now.AddSeconds(3630)),"Stündliche Prüfung ohne versteckten Dauerscan");
+  Assert(!UpdateSchedule.ShouldNotify("2.0.0","2.0.0",now.Ticks,now.AddHours(23.99)),"Später unterdrückt gleiche Version 24 Stunden");
+  Assert(UpdateSchedule.ShouldNotify("2.0.0","2.0.0",now.Ticks,now.AddHours(24)),"Erinnerung ab 24 Stunden");
+  Assert(UpdateSchedule.ShouldNotify("2.0.1","2.0.0",now.Ticks,now),"Neue Version trotz alter Zurückstellung");
+  Assert(UpdateSchedule.ShouldNotify("2.0.0","2.0.0",long.MaxValue,now),"Defekte gespeicherte Uhrzeit blockiert Updates nicht");
+  string prefFolder=Path.Combine(Path.GetTempPath(),"MAC-Update-Test-"+Guid.NewGuid().ToString("N"));
+  try{using(var state=new LocalState(prefFolder)){state.WritePreferences(new Preferences{UpdateNoticeVersion="2.0.0",UpdateNoticeUtcTicks=now.Ticks});var loaded=state.ReadPreferences();Assert(!UpdateSchedule.ShouldNotify("2.0.0",loaded.UpdateNoticeVersion,loaded.UpdateNoticeUtcTicks,now.AddHours(1)),"Später bleibt nach Neustart erhalten");}}finally{if(Directory.Exists(prefFolder))Directory.Delete(prefFolder,true);}
   string hash=new string('a',64);var current=new Version(Updater.Version);string future=new Version(current.Major,current.Minor+1,0).ToString();
   string fixture="{\"draft\":false,\"prerelease\":false,\"tag_name\":\"v1.1.0\",\"assets\":[{\"name\":\"MAC-Setup-1.1.0.exe\",\"browser_download_url\":\"https://github.com/Tunfisch77/MAC/releases/download/v1.1.0/MAC-Setup-1.1.0.exe\",\"digest\":\"sha256:"+hash+"\"}]}";
   fixture=fixture.Replace("1.1.0",future);

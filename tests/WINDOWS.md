@@ -36,3 +36,13 @@ Nur synthetische Kundendaten verwenden. Zuerst öffentliches reguläres Release 
 14. Anmeldung zeigt genau Vorname/Nachname/Passwort, keine Serveradresse und keine Admincheckbox. Alte auth-server.txt mit anderer Adresse darf keinen Einfluss haben. Neues Installationsprofil verbindet sich automatisch zum festen Server.
 15. Anzeigen/Verbergen und automatisches Verdecken beim Fensterwechsel testen. Leeres Passwort und nur ein ausgefülltes Namensfeld müssen verständlich abgewiesen werden.
 16. Admin mit gesetztem „Angemeldet bleiben“ anmelden, schließen und neu starten: keine automatische Adminanmeldung. Berater mit Merken darf wiederhergestellt werden. Server zuerst aktualisieren; alter Server muss vor dem Senden von Zugangsdaten einen Updatehinweis auslösen.
+
+## Abnahme 1.3.2 – automatische Updates
+
+1. App öffnen und anmelden, 30–45 Sekunden warten: automatische Prüfung ohne sichtbaren Timer, Eingabe weiterhin bedienbar. Nach einer Stunde erneut prüfen. Auch minimiert testen. Nach Schließen kein zusätzlicher Prozess/Windows-Dienst.
+2. Neues synthetisches Release über Testfixture anbieten: MAC-Dialog mit „Jetzt aktualisieren“/„Später“, richtiges Theme. Kein Hinweis über einem anderen App-Dialog oder einem Windows-Dateidialog. Minimiertes Hauptfenster wird wiederhergestellt.
+3. „Später“ und Dialog-X: gleiche Version 24 Stunden nicht automatisch erneut anbieten; Einstellung nach Neustart erhalten. Eine andere höhere Version darf angeboten werden. Manueller Button kann die zurückgestellte Version weiter öffnen.
+4. Netzwerk trennen: automatische Prüfung ohne Fehlerdialog, Eingaben unverändert. Manueller Button zeigt einen verständlichen Fehler. App während laufender Hintergrundprüfung schließen: keine späte Meldung, kein Absturz.
+5. Unexportierte Eingaben: „Jetzt aktualisieren“ → Export erforderlich. Exportbestätigung oder Dateidialog abbrechen: kein Setup-Start, Eingaben erhalten. Erfolgreich exportieren → Download mit Prüfsumme → Setup. Keine Kundendaten in GitHub-Anfragen.
+6. Neuinstallation und Update unter Windows: App-Selbsttest, Dateikopie, Verknüpfungen und App-Start erfolgreich → Setup schließt automatisch. Test mit scheiterndem Start und nicht anlegbarer Verknüpfung: Fehler bleibt sichtbar. Keine echten Kundendateien für Fehlertests verwenden.
+7. Automatisierte Fensterprüfungen nach Build: `dist\UpdateUiSmoke.exe` und `dist\InstallerUiSmoke.exe`. Synthetische Fixtures, kein Release-Download und keine Installation in echte Programmordner. Der Installer-Test prüft die tatsächliche Abschluss-/Fensterlogik, nicht den nativen Start einer installierten Windows-App.

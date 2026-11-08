@@ -9,6 +9,17 @@ using System.Linq;
 
 namespace MacApp {
 public sealed class Release { public string Version,Url,Hash,Name; }
+// Only scheduling metadata; never stores customer values or credentials.
+public sealed class UpdateSchedule {
+ public DateTime NextCheckUtc {get;private set;}
+ public UpdateSchedule(DateTime now){NextCheckUtc=now.AddSeconds(30);}
+ public bool IsDue(DateTime now){return now>=NextCheckUtc;}
+ public void Checked(DateTime now){NextCheckUtc=now.AddHours(1);}
+ public static bool ShouldNotify(string version,string lastVersion,long lastTicks,DateTime now){
+  if(version!=lastVersion||lastTicks<=0||lastTicks>DateTime.MaxValue.Ticks||now.Ticks<lastTicks)return true;
+  return now.Ticks-lastTicks>=TimeSpan.FromHours(24).Ticks;
+ }
+}
 public static class Updater {
  public const string Version=BuildInfo.Version;
  const string Api="https://api.github.com/repos/Tunfisch77/MAC/releases/latest";
