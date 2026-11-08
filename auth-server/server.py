@@ -125,8 +125,40 @@ class Application:
         return dict(token=token, role=role, user=self.user_public(user), expires=expiry)
 
     def route(self, db, method, path, body, token, ip):
-        if method == 'GET' and path == '/health':
-            return {'service':'mac-auth', 'api':1}
+        if method in ('GET', 'HEAD') and path in ('/health', '/'):
+            return {'service':'mac-auth', 'api':1, 'auto_login':True}
+        if method == 'POST' and path == '/v2/login':
+            self.keys(body, {'first','last','password','remember'})
+            self.throttle(db, 'login-ip', ip, 40)
+            if not isinstance(body.get('remember', False), bool):
+                raise ApiError(400, 'Ungültige Anmeldung.')
+            password = body.get('password', '')
+            if not isinstance(password, str) or not 1 <= len(password) <= 128:
+                raise ApiError(401, 'Name oder Passwort stimmt nicht.')
+            first, last = body.get('first', ''), body.get('last', '')
+            if not isinstance(first, str) or not isinstance(last, str):
+                raise ApiError(400, 'Vorname und Nachname prüfen.')
+            empty = not first.strip() and not last.strip()
+            user = None
+            if not empty:
+                first, last = normal_name(first), normal_name(last)
+                key = login_key(first, last)
+                self.throttle(db, 'login-account', key, 15)
+                user = db.execute('SELECT * FROM users WHERE login=?', (key,)).fetchone()
+            advisor_ok = password_ok(password, user['password'] if user else self.dummy_hash)
+            # A matching adviser password never grants admin privileges, even if
+            # an old account happens to share the master password. New reuse is blocked.
+            if user and advisor_ok:
+                if not user['enabled']:
+                    raise ApiError(401, 'Name oder Passwort stimmt nicht.')
+                return self.issue(db, user, 'advisor', body.get('remember', False))
+            # Every master-password attempt shares the existing global limiter,
+            # including requests with unknown names and the legacy login route.
+            self.throttle(db, 'master-global', 'admin', 60)
+            admin_ok = password_ok(password, self.admin_hash)
+            if not admin_ok or (not empty and (not user or not user['enabled'])):
+                raise ApiError(401, 'Name oder Passwort stimmt nicht.')
+            return self.issue(db, user, 'admin')
         if method == 'POST' and path == '/v1/login':
             self.keys(body, {'first','last','password','admin','remember'})
             self.throttle(db, 'login-ip', ip, 40)
@@ -169,7 +201,7 @@ class Application:
             old = body.get('old_password','')
             if not isinstance(old,str) or len(old)>128 or not password_ok(old,user['password']):
                 raise ApiError(403, 'Bisheriges Passwort stimmt nicht.')
-            new = check_password(body.get('new_password'))
+            new = self.advisor_password(body.get('new_password'))
             db.execute('UPDATE users SET password=? WHERE id=?', (password_hash(new),user['id']))
             db.execute('DELETE FROM sessions WHERE user_id=?', (user['id'],))
             return {'ok':True}
@@ -181,7 +213,7 @@ class Application:
         if path == '/v1/admin/users' and method == 'POST':
             self.keys(body, {'first','last','password'})
             first, last = normal_name(body.get('first')), normal_name(body.get('last'))
-            password = check_password(body.get('password'))
+            password = self.advisor_password(body.get('password'))
             uid = secrets.token_hex(16)
             try:
                 db.execute('INSERT INTO users(id,first,last,login,password) VALUES(?,?,?,?,?)', (uid,first,last,login_key(first,last),password_hash(password)))
@@ -194,7 +226,7 @@ class Application:
             if not isinstance(uid,str) or not re.fullmatch('[a-f0-9]{32}', uid) or not db.execute('SELECT 1 FROM users WHERE id=?',(uid,)).fetchone():
                 raise ApiError(404, 'Berater nicht gefunden.')
             if 'password' in body:
-                db.execute('UPDATE users SET password=? WHERE id=?',(password_hash(check_password(body['password'])),uid))
+                db.execute('UPDATE users SET password=? WHERE id=?',(password_hash(self.advisor_password(body['password'])),uid))
             if 'enabled' in body:
                 if not isinstance(body['enabled'],bool):
                     raise ApiError(400,'Ungültiger Kontostatus.')
@@ -213,6 +245,12 @@ class Application:
             return self.issue(db,target,'admin')
         raise ApiError(404, 'Funktion nicht gefunden.')
 
+    def advisor_password(self, value):
+        value = check_password(value)
+        if password_ok(value, self.admin_hash):
+            raise ApiError(400, 'Dieses Passwort kann nicht als Beraterpasswort verwendet werden. Bitte ein anderes wählen.')
+        return value
+
     @staticmethod
     def keys(body, allowed):
         if not isinstance(body,dict) or set(body)-allowed:
@@ -224,7 +262,7 @@ class Application:
             if not self.testing and env.get('wsgi.url_scheme') != 'https' and env.get('PATH_INFO') != '/health':
                 raise ApiError(400,'Nur HTTPS ist erlaubt.')
             method, path=env.get('REQUEST_METHOD',''),env.get('PATH_INFO','')
-            if method not in ('GET','POST'):
+            if method not in ('GET','HEAD','POST'):
                 raise ApiError(405,'Methode nicht erlaubt.')
             if env.get('QUERY_STRING'):
                 raise ApiError(400,'URL-Parameter sind nicht erlaubt.')
@@ -253,7 +291,7 @@ class Application:
         headers=[('Content-Type','application/json; charset=utf-8'),('Content-Length',str(len(data))),('Cache-Control','no-store'),('X-Content-Type-Options','nosniff'),('Strict-Transport-Security','max-age=31536000')]
         if status==429: headers.append(('Retry-After','900'))
         start_response(str(status)+' '+labels[status],headers)
-        return [data]
+        return [] if env.get('REQUEST_METHOD') == 'HEAD' else [data]
 
 
 def create_app():

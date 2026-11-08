@@ -1,0 +1,7 @@
+*
+!requirements.txt
+!server.py
+!manage.py
+!gunicorn.conf.py
+!Dockerfile
+!entrypoint.py
