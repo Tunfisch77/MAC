@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: mac-anmeldung
+    runtime: docker
+    plan: starter
+    region: frankfurt
+    dockerfilePath: ./auth-server/Dockerfile
+    dockerContext: ./auth-server
+    healthCheckPath: /health
+    autoDeployTrigger: 'off'
+    disk:
+      name: mac-konten
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: MAC_DATABASE
+        value: /data/mac-auth.sqlite3
+      - key: MAC_ADMIN_HASH
+        sync: false
+      - key: FORWARDED_ALLOW_IPS
+        value: '*'
