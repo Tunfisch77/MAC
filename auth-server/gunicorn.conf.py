@@ -14,3 +14,4 @@ limit_request_line=2048
 limit_request_fields=30
 limit_request_field_size=4096
 umask=0o077
+control_socket_disable = True
