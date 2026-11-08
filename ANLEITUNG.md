@@ -1,20 +1,22 @@
-# MAC Kundenklärung 1.3.0
+# MAC Kundenklärung 1.3.1
 
 ## Installation
 
-Windows 10/11 mit .NET Framework 4.7.2 oder neuer. Excel ist zum Erfassen und Exportieren nicht erforderlich. Berater benötigen ausschließlich `MAC-Setup-1.3.0.exe`. Während der Installation ist Internet erforderlich: Das passende Programmpaket muss vorher im öffentlichen GitHub-Release `v1.3.0` liegen. Einzelheiten für den Administrator stehen in ONLINE_SETUP.md.
+Windows 10/11 mit .NET Framework 4.7.2 oder neuer. Excel ist zum Erfassen und Exportieren nicht erforderlich. Berater benötigen ausschließlich `MAC-Setup-1.3.1.exe`. Während der Installation ist Internet erforderlich: Das passende Programmpaket muss vorher im öffentlichen GitHub-Release `v1.3.1` liegen. Einzelheiten für den Administrator stehen in ONLINE_SETUP.md.
 
 Programmordner: `%LOCALAPPDATA%\MAC-Versicherungsagentur\`. Die Installation erfolgt pro Windows-Benutzer ohne Administratorrechte. Startmenü- und, wenn erlaubt, Desktop-Verknüpfungen werden erstellt. Der Installer ist unsigniert; bei einer Sperre auf verwalteten PCs die Freigabe durch die IT verwenden.
 
 ## Zentrale Anmeldung
 
-Beim ersten Start die HTTPS-Adresse des Anmeldeservers eingeben, die du von der MAC-Administration erhältst. Vorname und Nachname in die richtigen Felder eintragen und dein Beraterpasswort eingeben. Groß-/Kleinschreibung des Anmeldenamens ist unerheblich. Ein Konto muss zuvor von einem Admin angelegt worden sein.
+Die App verbindet sich automatisch mit `https://mac-anmeldung.onrender.com`. Es gibt kein Adressfeld; eine alte `auth-server.txt` wird nicht mehr ausgewertet. Vorname und Nachname in die richtigen Felder eintragen und dein Beraterpasswort eingeben. Groß-/Kleinschreibung des Anmeldenamens ist unerheblich. Ein Konto muss zuvor von einem Admin angelegt worden sein.
+
+**Anzeigen / Verbergen** macht das eingegebene Passwort vorübergehend sichtbar. Bei einem Fensterwechsel und beim Anmelden wird es wieder verdeckt.
 
 **Angemeldet bleiben** merkt sich einen Windows-geschützten Anmeldenachweis für höchstens 30 Tage. Kein Passwort und keine Passwortliste werden auf dem PC gespeichert. Der Server prüft die Anmeldung beim Start, ungefähr jede Minute im Hauptfenster und vor jedem Excel-Export. Während geöffneter Dialoge pausiert die Hintergrundprüfung. Ohne Internet bzw. bei ungültiger Anmeldung wird die Bearbeitung gesperrt; der lokale Entwurf bleibt erhalten.
 
 Über **Konto / Abmelden** kannst du den Berater wechseln, dich abmelden oder dein eigenes Passwort ändern. Passwortänderung: bisheriges Passwort plus zweimal neues Passwort (14–128 Zeichen); anschließend neu anmelden. Eine Änderung beendet auch die anderen Sitzungen dieses Kontos.
 
-**Adminzugriff:** `Adminpasswort verwenden` markieren. Mit Vor- und Nachnamen eines bestehenden aktiven Beraters öffnet das gemeinsame Adminpasswort dessen Profil. Ohne beide Namen öffnet es die zentrale Kontoverwaltung. Dort lassen sich Konten anlegen, Passwörter zurücksetzen, Konten sperren/freigeben und Sitzungen beenden. Adminanmeldungen werden nicht über einen App-Neustart hinweg gespeichert und gelten höchstens 8 Stunden. Wer das gemeinsame Adminpasswort kennt, hat diese Rechte für alle Konten.
+**Adminzugriff:** Das Passwort wird auf dem Server automatisch als Berater- oder Adminpasswort erkannt; es gibt kein zusätzliches Kästchen. Mit Vor- und Nachnamen eines bestehenden aktiven Beraters öffnet das gemeinsame Adminpasswort dessen Profil. Ohne beide Namen öffnet es die zentrale Kontoverwaltung. Dort lassen sich Konten anlegen, Passwörter zurücksetzen, Konten sperren/freigeben und Sitzungen beenden. Adminanmeldungen werden nicht über einen App-Neustart hinweg gespeichert und gelten höchstens 8 Stunden. Wer das gemeinsame Adminpasswort kennt, hat diese Rechte für alle Konten.
 
 Oben in der App steht der angemeldete Berater bzw. ausdrücklich **Adminmodus · Berater: …**. Die App ordnet lokale Entwürfe dem Konto und dem Server zu. Ein Beraterwechsel übernimmt keine Kundeneinträge in das andere Profil. Es gibt keine Synchronisierung von Kundendaten zwischen PCs oder Standorten.
 
@@ -97,6 +99,6 @@ Vor dem Export wird das Konto online geprüft. In der bisher leeren Zeile 3 steh
 
 ## Online- und lokale Daten ab 1.3
 
-Die früher rein lokale Nutzung wird für die ausdrücklich gewünschte zentrale Anmeldung erweitert. Auf dem Anmeldeserver liegen Beraternamen, gesalzene Passwort-Hashes, widerrufbare Sitzungen und Zähler zur Begrenzung von Anmeldeversuchen. Kundeneinträge werden nicht dorthin übertragen. Lokal liegen die bekannten Einstellungen, die HTTPS-Serveradresse und ggf. ein Windows-geschützter Anmeldenachweis. Entwürfe liegen verschlüsselt in einem kontospezifischen Unterordner `profiles` des bisherigen Datenordners. Gemeinsame Windows-Konten stellen keine sichere Trennung gegenüber anderen lokalen Programmen dar.
+Die früher rein lokale Nutzung wird für die ausdrücklich gewünschte zentrale Anmeldung erweitert. Auf dem Anmeldeserver liegen Beraternamen, gesalzene Passwort-Hashes, widerrufbare Sitzungen und Zähler zur Begrenzung von Anmeldeversuchen. Kundeneinträge werden nicht dorthin übertragen. Lokal liegen die bekannten Einstellungen und ggf. ein Windows-geschützter Anmeldenachweis. Die öffentliche HTTPS-Adresse ist fest im Programm hinterlegt; alte Adressdateien bleiben wirkungslos. Entwürfe liegen verschlüsselt in einem kontospezifischen Unterordner `profiles` des bisherigen Datenordners. Gemeinsame Windows-Konten stellen keine sichere Trennung gegenüber anderen lokalen Programmen dar.
 
-Einrichtung für die Administration: **EINRICHTUNG_1.3.0.md** im vollständigen Projektpaket.
+Einrichtung für die Administration: **EINRICHTUNG_1.3.1.md** im vollständigen Projektpaket.

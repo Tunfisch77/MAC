@@ -1,8 +1,8 @@
-# MAC Kundenklärung 1.3.0
+# MAC Kundenklärung 1.3.1
 
 Lokale Windows-Desktop-App für die bereitgestellte MAC-XLSM-Vorlage. C# 5 / WinForms / .NET Framework 4.7.2+, ohne externe Client-Laufzeitpakete, lokale Kundendatenbank, WebView oder Telemetrie. Version 1.3 ergänzt einen zentralen HTTPS-Anmeldedienst (Python/WSGI, SQLite für Konten und Sitzungen). Kundeneinträge und ihre verschlüsselte Wiederherstellung bleiben lokal. Nichts wurde gepusht oder veröffentlicht.
 
-**Zuerst EINRICHTUNG_1.3.0.md lesen.** Der Anmeldedienst muss zusätzlich zu GitHub bereitgestellt werden. Kein echter Server und keine echten Konten sind im Paket vorkonfiguriert.
+**Zuerst EINRICHTUNG_1.3.1.md lesen.** Der Anmeldedienst muss zusätzlich zu GitHub bereitgestellt werden. Die öffentliche Serveradresse `https://mac-anmeldung.onrender.com` ist fest hinterlegt. Zugangsdaten und Konten werden nicht mitgeliefert.
 
 ## Projekt
 
@@ -32,7 +32,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
 
 Der Bypass gilt nur für diesen Build-Aufruf, nicht dauerhaft. In verwalteten Umgebungen den Build mit der IT abstimmen. Der Build benötigt bei vorhandenen Referenzen kein Internet und verwendet ausschließlich Framework-Referenzen, keine erweiterten Mono-Laufzeitreferenzen. Der frühere `String.TrimStart(Char)`-Fehler bleibt durch char[]-Aufrufe und IL-Prüfung abgesichert.
 
-Ergebnis in `dist`: `MAC-Setup-1.3.0.exe`, `MAC-Programm-1.3.0.zip`, `SHA256SUMS.txt`. Das Setup enthält die Prüfsumme genau dieses Programm-ZIPs. Dateien unterschiedlicher Builds nicht mischen.
+Ergebnis in `dist`: `MAC-Setup-1.3.1.exe`, `MAC-Programm-1.3.1.zip`, `SHA256SUMS.txt`. Das Setup enthält die Prüfsumme genau dieses Programm-ZIPs. Dateien unterschiedlicher Builds nicht mischen.
 
 ## Testen
 
@@ -56,18 +56,22 @@ DPAPI-Dokumentation: https://learn.microsoft.com/dotnet/api/system.security.cryp
 
 Den Inhalt von `Quellcode/MAC-App` aus dem Administratorpaket in die Wurzel von `Tunfisch77/MAC` übernehmen, einschließlich `src`, `assets`, `tests`, Buildskript, Dokumentation, `.gitignore` und `.github/workflows/build.yml`. Keine Original-Kundendateien oder lokalen Entwürfe hochladen. `assets/template.xlsm` ist bereinigt.
 
-Unter https://github.com/Tunfisch77/MAC/releases/new den Tag **v1.3.0** erstellen. Die drei zusammengehörigen Dateien aus `Release-Dateien` anhängen und regulär/öffentlich veröffentlichen, nicht als Draft oder Pre-release. Das Programm-ZIP unverändert hochladen. Danach unter Windows testen; Berater erhalten nur die EXE. Der Workflow baut und prüft auf Windows und lädt ein Build-Artefakt hoch, veröffentlicht aber kein Release; nur Leserechte.
+Unter https://github.com/Tunfisch77/MAC/releases/new den Tag **v1.3.1** erstellen. Die drei zusammengehörigen Dateien aus `Release-Dateien` anhängen und regulär/öffentlich veröffentlichen, nicht als Draft oder Pre-release. Das Programm-ZIP unverändert hochladen. Danach unter Windows testen; Berater erhalten nur die EXE. Der Workflow baut und prüft auf Windows und lädt ein Build-Artefakt hoch, veröffentlicht aber kein Release; nur Leserechte.
 
 Für weitere Versionen `src/Version.cs` erhöhen, Anleitung aktualisieren und neu bauen. Bereits veröffentlichte Pakete nicht ersetzen. GitHub muss für den Installer einen SHA-256-Digest liefern; andernfalls verweigert der Updater die Installation. Private Releases ohne öffentlichen Download werden nicht unterstützt. Vollständige Online-Anleitung in ONLINE_SETUP.md.
 
 ## Zentrale Anmeldung entwickeln und testen
 
-`python -m unittest discover -s auth-server/tests -v` benötigt nur Python 3.12. `build.ps1` baut zusätzlich `dist/AuthIntegration.exe`. Mit `python auth-server/tests/client_integration.py dist/AuthIntegration.exe` läuft der echte .NET-Client gegen einen isolierten Loopback-Server. Dieser Test setzt die Serveradresse per Reflection auf HTTP; der Produktionsdialog akzeptiert ausschließlich HTTPS. Nur synthetische Testkonten, keine echten Zugangsdaten.
+`python -m unittest discover -s auth-server/tests -v` benötigt nur Python 3.12. `build.ps1` baut zusätzlich `dist/AuthIntegration.exe`. Mit `python auth-server/tests/client_integration.py dist/AuthIntegration.exe` läuft der echte .NET-Client gegen einen isolierten Loopback-Server. Dieser Test setzt die Serveradresse per Reflection auf HTTP; der Produktionsclient verwendet die fest eingebaute HTTPS-Adresse. Nur synthetische Testkonten, keine echten Zugangsdaten.
 
 `tests/AuthUiSmoke.cs` wird für einen separaten UI-Test zusammen mit den App-Quellen und `/main:AuthUiSmoke` gebaut. Er prüft die Anmeldemaske und die Adminauswahl gegen den Loopback-Testserver. Die normale App benötigt zur Nutzung einen echten, korrekt eingerichteten HTTPS-Anmeldedienst.
 
 Server: Python 3.12 und der in `auth-server/requirements.txt` gepinnte Gunicorn. Kein Framework nötig. Passwortableitung PBKDF2-HMAC-SHA256 mit 600.000 Runden und zufälligen 24-Byte-Salts; zufällige 256-Bit-Anmeldenachweise, nur deren SHA-256-Werte in der Serverdatenbank. SHA-256 wird hier ausschließlich für zufällige Tokens, nicht als Passwortableitung verwendet.
 
-Das Konto ist durch normalisierten Vor- und Nachnamen eindeutig. Adminzugriff ist ein expliziter Anmeldemodus mit demselben zentralen Generalschlüssel für alle Profile; kein kundenseitiger Passwortvergleich. Reset/Sperre beendet alle Sitzungen eines Kontos. Admin-Hash-Wechsel entwertet Adminsitzungen. Beratersitzung maximal 8 Stunden ohne Merken, 30 Tage mit Merken; Admin maximal 8 Stunden ohne dauerhafte lokale Anmeldung.
+Das Konto ist durch normalisierten Vor- und Nachnamen eindeutig. Adminzugriff wird bei der Anmeldung serverseitig anhand des gemeinsamen Adminpassworts erkannt; kein kundenseitiger Passwortvergleich. Reset/Sperre beendet alle Sitzungen eines Kontos. Admin-Hash-Wechsel entwertet Adminsitzungen. Beratersitzung maximal 8 Stunden ohne Merken, 30 Tage mit Merken; Admin maximal 8 Stunden ohne dauerhafte lokale Anmeldung.
 
 Die Client-Authentifizierung ist keine Manipulationssperre gegen einen Angreifer mit Kontrolle über die lokale EXE/Windows-Umgebung. Es gibt kein serverseitiges Kundenregister oder eine digitale Signatur für Excel-Dateien.
+
+### Proxyprüfung unter Linux
+
+Mit den installierten `auth-server/requirements.txt`: `python auth-server/tests/proxy_integration.py`. Startet Gunicorn auf einem freien lokalen Port mit synthetischem Adminhash und temporärer Datenbank. Prüft HTTP-Abweisung, weitergeleitetes HTTPS und HEAD-Antworten; benötigt keinen produktiven Dienst.

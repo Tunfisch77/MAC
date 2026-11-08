@@ -24,6 +24,8 @@ static class SelfTest {
    }Array.Clear(attributed,0,attributed.Length);
    foreach(string badUrl in new[]{"http://example.com","https://user:pass@example.com","https://example.com/path","https://example.com?token=secret","https://localhost","https://example.com:444"}){bool blocked=false;try{AuthClient.ValidateServer(badUrl);}catch{blocked=true;}Assert(blocked,"Ungültiger Anmeldeserver abgewiesen");}
    Assert(AuthClient.ValidateServer("https://example.com/")=="https://example.com","HTTPS Serveradresse");Assert(AuthClient.SafeName("Tuncay Guliyev")=="Tuncay_Guliyev","Sicherer Dateiname");
+   bool oldServer=false;try{AuthClient.CheckService(new AuthReply{service="mac-auth",api=1});}catch(AuthFailure){oldServer=true;}Assert(oldServer,"Alter Server verständlich abgewiesen");AuthClient.CheckService(new AuthReply{service="mac-auth",api=1,auto_login=true});
+   Assert(AuthClient.ServerError(400,"Nur HTTPS ist erlaubt.").Contains("FORWARDED_ALLOW_IPS"),"HTTPS-Konfigurationsfehler erklärt");
    bool invalid=false;try{Book.Number("abc");}catch{invalid=true;}Assert(invalid,"ungültige Zahl");
    for(int i=0;i<10;i++){
     var missing=r.Clone();missing.Values[i]=" ";invalid=false;try{Book.Validate(missing);}catch{invalid=true;}Assert(invalid,"Pflichtfeld "+i);missing.Clear();

@@ -10,19 +10,20 @@ namespace MacApp {
   internal static TextBox Field(Form form,string label,int y,bool password=false){form.Controls.Add(new Label{Text=label,Location=new Point(24,y),Size=new Size(form.ClientSize.Width-48,24)});var input=new TextBox{UseSystemPasswordChar=password,MaxLength=password?128:256};form.Controls.Add(new InputFrame(input){Location=new Point(24,y+26),Size=new Size(form.ClientSize.Width-48,38)});return input;}
   internal static SoftButton Button(Form form,string text,int x,int y,int width,bool primary=false){var b=new SoftButton{Text=text,Location=new Point(x,y),Size=new Size(width,38),Tag=primary?"primary":"secondary"};form.Controls.Add(b);return b;}
   public static bool Login(IWin32Window owner,Palette palette,AuthClient client,string hint=""){
-   using(var f=Window("Zentrale Anmeldung",560,650)){
+   using(var f=Window("Zentrale Anmeldung",560,610)){
     f.Controls.Add(new Label{Text="MAC · Willkommen",Font=new Font("Segoe UI",22,FontStyle.Bold),Location=new Point(24,18),Size=new Size(510,42)});
     f.Controls.Add(new Label{Text="Dein Konto wird online geprüft. Kundendaten bleiben lokal.",Location=new Point(24,65),Size=new Size(510,36),Tag="muted"});
-    var server=Field(f,"Anmeldeserver (Adresse von der MAC-Administration)",106);server.Text=client.Server??"";
-    var first=Field(f,"Vorname",180);var last=Field(f,"Nachname",254);var password=Field(f,"Passwort",328,true);
-    var admin=new CheckBox{Text="Adminpasswort verwenden",Location=new Point(24,407),Size=new Size(245,28)};f.Controls.Add(admin);
-    var remember=new CheckBox{Text="Angemeldet bleiben (max. 30 Tage)",Location=new Point(24,440),Size=new Size(480,28)};f.Controls.Add(remember);
-    var help=new Label{Text="Admin: Namen für direkten Profilzugriff eingeben oder beide Namen für die Kontoverwaltung leer lassen.",Location=new Point(24,477),Size=new Size(510,47),Tag="muted"};f.Controls.Add(help);
-    var error=new Label{Text=hint,Location=new Point(24,528),Size=new Size(510,64),Tag="error"};f.Controls.Add(error);
-    var enter=Button(f,"Anmelden",338,600,198,true);var cancel=Button(f,"Schließen",24,600,140);cancel.DialogResult=DialogResult.Cancel;f.CancelButton=cancel;f.AcceptButton=enter;
-    admin.CheckedChanged+=(s,e)=>{remember.Enabled=!admin.Checked;if(admin.Checked)remember.Checked=false;};bool busy=false;
-    f.FormClosing+=(s,e)=>{if(busy)e.Cancel=true;};
-    enter.Click+=async(s,e)=>{if(busy)return;busy=true;enter.Enabled=false;cancel.Enabled=false;error.Text="Verbindung wird geprüft …";try{await client.Configure(server.Text);await client.Login(first.Text,last.Text,password.Text,admin.Checked,remember.Checked);password.Clear();password.ClearUndo();busy=false;f.DialogResult=DialogResult.OK;}catch(Exception ex){error.Text=ex.Message;password.Clear();password.ClearUndo();}finally{busy=false;enter.Enabled=true;cancel.Enabled=true;}};
+    var first=Field(f,"Vorname",106);var last=Field(f,"Nachname",180);var password=Field(f,"Passwort",254,true);first.MaxLength=last.MaxLength=80;
+    password.Parent.Width=358;
+    var show=Button(f,"Anzeigen",394,280,142);show.AccessibleName="Passwort anzeigen";
+    show.Click+=(s,e)=>{password.UseSystemPasswordChar=!password.UseSystemPasswordChar;show.Text=password.UseSystemPasswordChar?"Anzeigen":"Verbergen";show.AccessibleName="Passwort "+(password.UseSystemPasswordChar?"anzeigen":"verbergen");};
+    f.Deactivate+=(s,e)=>{password.UseSystemPasswordChar=true;show.Text="Anzeigen";show.AccessibleName="Passwort anzeigen";};
+    var remember=new CheckBox{Text="Angemeldet bleiben · nur für Berater (max. 30 Tage)",Location=new Point(24,334),Size=new Size(510,28)};f.Controls.Add(remember);
+    f.Controls.Add(new Label{Text="Adminpasswort wird automatisch erkannt. Für die Kontoverwaltung beide Namensfelder leer lassen; für Profilzugriff den Beraternamen eingeben.",Location=new Point(24,377),Size=new Size(510,66),Tag="muted"});
+    var error=new Label{Text=hint,Location=new Point(24,455),Size=new Size(510,88),Tag="error"};f.Controls.Add(error);
+    var enter=Button(f,"Anmelden",338,554,198,true);var cancel=Button(f,"Schließen",24,554,140);cancel.DialogResult=DialogResult.Cancel;f.CancelButton=cancel;f.AcceptButton=enter;
+    bool busy=false;f.FormClosing+=(s,e)=>{if(busy)e.Cancel=true;};f.Shown+=(s,e)=>first.Focus();
+    enter.Click+=async(s,e)=>{if(busy)return;if(string.IsNullOrEmpty(password.Text)){error.Text="Bitte dein Passwort eingeben.";password.Focus();return;}if(string.IsNullOrWhiteSpace(first.Text)!=string.IsNullOrWhiteSpace(last.Text)){error.Text="Vorname und Nachname gemeinsam eingeben. Für die Kontoverwaltung beide leer lassen.";return;}busy=true;enter.Enabled=cancel.Enabled=show.Enabled=first.Enabled=last.Enabled=password.Enabled=remember.Enabled=false;password.UseSystemPasswordChar=true;show.Text="Anzeigen";error.Text="Anmeldung wird geprüft …";try{await client.Configure();await client.Login(first.Text,last.Text,password.Text,remember.Checked);password.Clear();password.ClearUndo();busy=false;f.DialogResult=DialogResult.OK;}catch(Exception ex){error.Text=ex.Message;password.Clear();password.ClearUndo();}finally{busy=false;enter.Enabled=cancel.Enabled=show.Enabled=first.Enabled=last.Enabled=password.Enabled=remember.Enabled=true;password.Focus();}};
     palette.Apply(f);bool result=f.ShowDialog(owner)==DialogResult.OK;password.Clear();password.ClearUndo();return result;
    }
   }

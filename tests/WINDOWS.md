@@ -17,12 +17,12 @@ Nur synthetische Kundendaten verwenden. Zuerst öffentliches reguläres Release 
 13. Updateprüfung mit ungespeicherten Eingaben möglich. Offline/kein Release verständlich. Vor tatsächlicher Installation Export verlangen; Abbruch und ungültige Angaben dürfen weder Installation noch Datenverlust verursachen. Setup darf den separaten Datenordner nicht überschreiben.
 14. Optional mit Process Monitor: keine Kundenlogs, unverschlüsselten Arbeitskopien oder unerwarteten Netzwerkanfragen. Kundendaten nur im ausgewählten Excel-Ziel und DPAPI-verschlüsseltem Profilentwurf; Einstellungen ohne Kundendaten.
 
-## Zusätzliche Abnahme 1.3.0 – ausschließlich synthetische Testdaten
+## Zusätzliche Abnahme 1.3.1 – ausschließlich synthetische Testdaten
 
 1. HTTPS-Anmeldedienst mit persistentem Speicher einrichten. Erst `/health`, dann Login prüfen. Fehlender/falscher Server darf keinen Zugang ermöglichen. HTTP und Weiterleitungen dürfen nicht akzeptiert werden.
-2. Leere Namen + Adminmodus + Adminpasswort: Verwaltung öffnet sich. Zwei Testberater anlegen. Gleicher Name in anderer Großschreibung muss abgewiesen werden.
+2. Leere Namen + Adminpasswort: Verwaltung öffnet sich. Zwei Testberater anlegen. Gleicher Name in anderer Großschreibung muss abgewiesen werden.
 3. Richtiges Beraterpasswort/falscher Name und richtiges Profil/falsches Passwort müssen scheitern. Normale Anmeldung darf keine Kontoverwaltung erlauben.
-4. Name + Adminmodus + gemeinsames Adminpasswort: richtige Profilzuordnung und sichtbarer Adminmodus. Gesperrtes Konto darf nicht geöffnet werden.
+4. Name + gemeinsames Adminpasswort: richtige Profilzuordnung und sichtbarer Adminmodus. Gesperrtes Konto darf nicht geöffnet werden.
 5. Eigenes Passwort ändern, erneut anmelden. Auf zweitem PC muss die alte Sitzung nach Prüfung ungültig sein. Admin-Reset, Sperren, Freigeben und „Sitzungen beenden“ ebenso testen.
 6. „Angemeldet bleiben“: App schließen/starten; bei erreichbarem Server gültiges Konto wieder öffnen. Tokenfile `auth-session.bin` ist DPAPI-geschützt. Normales Abmelden löscht es. Adminmodus darf keinen dauerhaften Nachweis anlegen. Im Self-Test wird der native Windows-Tokenrundlauf geprüft.
 7. Testentwurf mit Konto A; wechseln zu B. B darf A nicht angezeigt bekommen. Zurück zu A → Wiederherstellung anbieten. Admin darf A auf demselben PC öffnen. Auf anderem PC entsteht keine Fernübertragung des Entwurfs.
@@ -32,3 +32,7 @@ Nur synthetische Kundendaten verwenden. Zuerst öffentliches reguläres Release 
 11. Gültiger Export: Vorname/Nachname in Zeile 3, korrekter Dateinamenvorschlag, Makros und zehn Kundenspalten erhalten. Andere Beraterdatei importieren → neuer Export trägt aktuellen Berater. Keine Formeleinschleusung über Namen möglich.
 12. Einrichten/Update mit echten Windows-Berechtigungen testen. Bei 100/125/150-%-Skalierung Anmeldung, Passwortfenster und Adminverwaltung prüfen.
 13. Server neu deployen: Konten bleiben bestehen. Admin-Hash austauschen: alte Adminsitzungen ungültig, normale Konten weiter nutzbar. Datenbanksicherung und Wiederherstellung auf Testdienst prüfen.
+
+14. Anmeldung zeigt genau Vorname/Nachname/Passwort, keine Serveradresse und keine Admincheckbox. Alte auth-server.txt mit anderer Adresse darf keinen Einfluss haben. Neues Installationsprofil verbindet sich automatisch zum festen Server.
+15. Anzeigen/Verbergen und automatisches Verdecken beim Fensterwechsel testen. Leeres Passwort und nur ein ausgefülltes Namensfeld müssen verständlich abgewiesen werden.
+16. Admin mit gesetztem „Angemeldet bleiben“ anmelden, schließen und neu starten: keine automatische Adminanmeldung. Berater mit Merken darf wiederhergestellt werden. Server zuerst aktualisieren; alter Server muss vor dem Senden von Zugangsdaten einen Updatehinweis auslösen.
